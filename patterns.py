@@ -4,6 +4,16 @@ import math
 def apriori(itemsets, threshold):
     # DO NOT CHANGE THE PRECEDING LINE
     
+    # calculate the minimum support count 
+    min_support = (threshold / 100) * len(itemsets)
+
+    # calculate min support
+    # find frequent 1-itemsets
+    # iterative candidate generation
+    # filter frequent itemsets
+    # repeat 
+    # return results
+
     # Should return a list of pairs, where each pair consists of the frequent itemset and its support 
     # e.g. [(set(items), 0.7), (set(otheritems), 0.74), ...]
     return []
