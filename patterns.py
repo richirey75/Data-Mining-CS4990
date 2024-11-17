@@ -7,11 +7,43 @@ def apriori(itemsets, threshold):
     # calculate the minimum support count 
     min_support = (threshold / 100) * len(itemsets)
 
-    # implement the function here (?)
+    # find frequent 1-itemsets
+    L = find_frequent_1_itemsets(itemsets, min_support)
+
+    k = 2 # start with 2-itemsets (pairs of items)
+    while True:
+        Ck = apriori_gen(L, k) # generate k-itemsets from frequent (k-1) itemsets
+
+        if not Ck: # no candidates, stop
+            break
+
+        # count support of candidate k-itemsets by checking their occurence in the itemsets
+        freq_k = []
+        for c in Ck:
+            count = sum(1 for itemset in itemsets if c.issubset(itemset))
+            support = count / len (itemsets)
+            if support >= min_support:
+                freq_k.append((c, support))
+        
+        # find frequent k-itemsets, add to L 
+        if freq_k:
+            L.extend(freq_k)
     
     # Should return a list of pairs, where each pair consists of the frequent itemset and its support 
     # e.g. [(set(items), 0.7), (set(otheritems), 0.74), ...]
-    return []
+    return [(set(itemset), support) for itemset, support in L]
+
+# function to find frequent 1-itemsets
+def find_frequent_1_itemsets(itemsets, min_support):
+    item_counts = {} 
+    for itemset in itemsets:
+        for item in itemset:
+            # count how many times each item appears in the dataset
+            if item in item_counts:
+                item_counts[item] += 1
+            else:
+                item_counts[item] = 1
+    return [(frozenset([item]), count / len(itemsets)) for item, count in item_counts.items() if count >= min_support]
 
 # function to generate candidate k-itemsets (k >= 2)
 def apriori_gen(Lk_1, k):
