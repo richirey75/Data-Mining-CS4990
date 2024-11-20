@@ -27,4 +27,9 @@ def association_rules(itemsets, frequent_itemsets, metric, metric_threshold):
     # Each entry (c,e,m) represents a rule c => e, with the matric value m
     # Rules should only be included if m is greater than the given threshold.    
     # e.g. [(set(condition),set(effect),0.45), ...]
+
+    # initialize rules to be returned as a list
+    rules = []
+
+    
     return []
