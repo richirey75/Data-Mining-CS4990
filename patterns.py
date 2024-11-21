@@ -1,4 +1,5 @@
 import math
+import itertools
 from itertools import combinations
 
 # DO NOT CHANGE THE FOLLOWING LINE
@@ -6,10 +7,10 @@ def apriori(itemsets, threshold):
     # DO NOT CHANGE THE PRECEDING LINE
     
     # calculate the minimum support count 
-    min_support = (threshold / 100) * len(itemsets)
+    # min_support = (threshold / 100) * len(itemsets)
 
     # find frequent 1-itemsets
-    L = find_frequent_1_itemsets(itemsets, min_support)
+    L = find_frequent_1_itemsets(itemsets, threshold)
 
     k = 2 # start with 2-itemsets (pairs of items)
     all_freq_items = L.copy()
@@ -25,7 +26,7 @@ def apriori(itemsets, threshold):
         for c in Ck:
             count = sum(1 for itemset in itemsets if set(c).issubset(itemset))
             support = count / len (itemsets)
-            if support >= min_support:
+            if support >= threshold:
                 freq_k.append((c, support))
         
         # find frequent k-itemsets, add to L 
@@ -51,7 +52,8 @@ def find_frequent_1_itemsets(itemsets, min_support):
                 item_counts[item] += 1
             else:
                 item_counts[item] = 1
-    return [(tuple([item]), count / len(itemsets)) for item, count in item_counts.items() if count >= min_support]
+    min_count = min_support * len(itemsets)
+    return [(tuple([item]), count / len(itemsets)) for item, count in item_counts.items() if count >= min_count]
 
 # function to generate candidate k-itemsets (k >= 2)
 def apriori_gen(Lk_1, k):
@@ -91,44 +93,47 @@ def association_rules(itemsets, frequent_itemsets, metric, metric_threshold):
     # for each frequent itemset, generate all nonempty subsets of each frequent itemset
     for (itemset, support) in frequent_itemsets:
         # generate subsets of itemset to be converted into antecedents
-        for subset in itemset:
-            antecedent = set(subset)
-            consequent = itemset - antecedent
+        for r in range(1, len(itemset)):
+            for subset in itertools.combinations(itemset, r):
+                antecedent = set(subset)
+                consequent = itemset - antecedent
 
-            if consequent == '':
-                continue
+                #check if consequent is empty
+                if not consequent:
+                    continue
 
-            # calculate support of antecedent
-            antecedent_support = find_support(antecedent, itemsets)
+                # calculate support of antecedent
+                antecedent_support = find_support(antecedent, itemsets)
 
-            # calculate metrics
-            confidence = support / antecedent_support
-            lift = confidence / find_support(consequent, itemsets)
-            kulczynski = 0.5 * (confidence + (support / find_support(consequent, itemsets)))
-            cosine = support / math.sqrt(antecedent_support * find_support(consequent, itemsets))
-            max_conf = max(confidence, (support / find_support(consequent, itemsets)))
-            all_conf = support / max(antecedent_support, find_support(consequent, itemsets))
+                if antecedent_support == 0:
+                    continue;
 
-            # determine if the rule passes the metric threshold
-            if metric == "lift":
-                metric_value = lift
-            elif metric == "all":
-                metric_value = all_conf;
-            elif metric == "max":
-                metric_value = max_conf;
-            elif metric == "kulczynski":
-                metric_value = kulczynski
-            elif metric == "cosine":
-                metric_value = cosine
-            
-            if metric_value >= metric_threshold:
-                rules.append((set(antecedent), set(consequent), metric_value))
-    # print(rules)
+                # calculate metrics
+                confidence = support / antecedent_support
+                lift = confidence / find_support(consequent, itemsets)
+                kulczynski = 0.5 * (confidence + (support / find_support(consequent, itemsets)))
+                cosine = support / math.sqrt(antecedent_support * find_support(consequent, itemsets))
+                max_conf = max(confidence, (support / find_support(consequent, itemsets)))
+                all_conf = support / max(antecedent_support, find_support(consequent, itemsets))
+
+                # determine if the rule passes the metric threshold
+                if metric == "lift":
+                    metric_value = lift
+                elif metric == "all":
+                    metric_value = all_conf;
+                elif metric == "max":
+                    metric_value = max_conf;
+                elif metric == "kulczynski":
+                    metric_value = kulczynski
+                elif metric == "cosine":
+                    metric_value = cosine
+                
+                if metric_value >= metric_threshold:
+                    rules.append((set(antecedent), set(consequent), metric_value))
     return rules
- 
 
 # calculate support, represented as a percentage
 def find_support(antecedent, itemsets):
     count = sum(1 for itemset in itemsets if set(antecedent).issubset(itemset))
-    support = count / len (itemsets)
+    support = count / len(itemsets)
     return support
