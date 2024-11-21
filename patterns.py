@@ -88,5 +88,11 @@ def association_rules(itemsets, frequent_itemsets, metric, metric_threshold):
     # initialize rules to be returned as a list
     rules = []
 
+    # initialize what is given to us from apriori function such as frequent itemsets
+
+    # take our metric from function call and execute necessary action based on what it is
+    # "lift", "all", "max", "kulczynski", "cosine"
+    # if rule's metric value exceeds or meets metic threshold, add into result list rules
+
     
     return []
