@@ -88,11 +88,47 @@ def association_rules(itemsets, frequent_itemsets, metric, metric_threshold):
     # initialize rules to be returned as a list
     rules = []
 
-    # initialize what is given to us from apriori function such as frequent itemsets
+    # for each frequent itemset, generate all nonempty subsets of each frequent itemset
+    for (itemset, support) in frequent_itemsets:
+        # generate subsets of itemset to be converted into antecedents
+        for subset in itemset:
+            antecedent = set(subset)
+            consequent = itemset - antecedent
 
-    # take our metric from function call and execute necessary action based on what it is
-    # "lift", "all", "max", "kulczynski", "cosine"
-    # if rule's metric value exceeds or meets metic threshold, add into result list rules
+            if consequent == '':
+                continue
 
-    
-    return []
+            # calculate support of antecedent
+            antecedent_support = find_support(antecedent, itemsets)
+
+            # calculate metrics
+            confidence = support / antecedent_support
+            lift = confidence / find_support(consequent, itemsets)
+            kulczynski = 0.5 * (confidence + (support / find_support(consequent, itemsets)))
+            cosine = support / math.sqrt(antecedent_support * find_support(consequent, itemsets))
+            max_conf = max(confidence, (support / find_support(consequent, itemsets)))
+            all_conf = support / max(antecedent_support, find_support(consequent, itemsets))
+
+            # determine if the rule passes the metric threshold
+            if metric == "lift":
+                metric_value = lift
+            elif metric == "all":
+                metric_value = all_conf;
+            elif metric == "max":
+                metric_value = max_conf;
+            elif metric == "kulczynski":
+                metric_value = kulczynski
+            elif metric == "cosine":
+                metric_value = cosine
+            
+            if metric_value >= metric_threshold:
+                rules.append((set(antecedent), set(consequent), metric_value))
+    # print(rules)
+    return rules
+ 
+
+# calculate support, represented as a percentage
+def find_support(antecedent, itemsets):
+    count = sum(1 for itemset in itemsets if set(antecedent).issubset(itemset))
+    support = count / len (itemsets)
+    return support
