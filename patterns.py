@@ -117,7 +117,9 @@ def association_rules(itemsets, frequent_itemsets, metric, metric_threshold):
                 all_conf = support / max(antecedent_support, find_support(consequent, itemsets))
 
                 # determine if the rule passes the metric threshold
-                if metric == "lift":
+                if metric == "confidence":
+                    metric_value = confidence
+                elif metric == "lift":
                     metric_value = lift
                 elif metric == "all":
                     metric_value = all_conf;
