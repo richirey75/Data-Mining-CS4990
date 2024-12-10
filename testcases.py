@@ -1,7 +1,6 @@
 import sys
 import classification
 import pandas
-import numpy
 import random
 import json
 import matplotlib.pyplot as plt

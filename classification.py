@@ -1,6 +1,4 @@
-import numpy
 import math
-
 
 # These are suggested helper functions
 # You can structure your code differently, but if you have
@@ -17,16 +15,26 @@ def make_node(previous_ys, xs, ys, columns):
     
     # If there are no rows (xs and ys are empty): 
     #      Return a node that classifies as the majority class of the parent
+    if not xs or not ys: 
+        return {"type": "class", "class": majority(previous_ys)}
     
     # If all ys are the same:
     #      Return a node that classifies as that class 
+    if same(ys):
+        return {"type": "class", "class": ys[0]}
     
     # If there are no more columns left:
     #      Return a node that classifies as the majority class of the ys
-
+    if not columns:
+        return {"type": "class", "class": majority(ys)}
 
     # Otherwise:
     # Compute the entropy of the current ys 
+    curr_entropy = entropy(ys)
+    best_gain = -1
+    best_column = None
+    best_splits = None
+
     # For each column:
     #     Perform a split on the values in that column 
     #     Calculate the entropy of each of the pieces
@@ -39,19 +47,49 @@ def make_node(previous_ys, xs, ys, columns):
     # Create a split-node that splits on this column, and has the result 
     #    of the recursive calls as children.
     
-    # Note: This is a placeholder return value
-    return {"type": "class", "class": majority(ys)}
+    for column in columns:
+        splits = {}
+        for i, value in enumerate(xs):
+            if value[column] not in splits:
+                splits[value[column]] = {"xs": [], "ys": []}
+            splits[value[column]]["xs"].append(xs[i])
+            splits[value[column]]["ys"].append(ys[i])
 
+        total = len(ys)
+        split_entropy = 0
+        for split in splits.values():
+            weight = len(split["ys"]) / total
+            split_entropy += weight * entropy(split["ys"])
+        
+        gain = curr_entropy - split_entropy
+        if gain > best_gain:
+            best_gain = gain
+            best_column = column
+            best_splits = splits
+
+    if best_gain <= 0:
+        return {"type": "class", "class": majority(ys)}
     
+    columns.remove(best_column)
+
+    node = {"type": "split", "split": best_column, "children": {}}
+    for value, split_data in best_splits.items():
+        node["children"][value] = make_node(
+            ys, split_data["xs"], split_data["ys"], columns
+        )
+
+    return node
     
 
 # Determine if all values in a list are the same 
 # Useful for the second basecase above
 def same(values):
-    if not values: return True
+    if not values: # handle case when input list values is empty []
+        return True
     # if there are values:
     # pick the first, check if all other are the same 
-
+    first = values[0]
+    return all(value == first for value in values)
 
     
 # Determine how often each value shows up 
@@ -59,19 +97,21 @@ def same(values):
 # but also to determine which values is the 
 # most common
 def counts(values):
-
-    # placeholder return value 
-    return {}
+    result = {}
+    for value in values:
+        if value not in result:
+            result[value] = 0
+        result[value] += 1
+    return result
    
 
 # Return the most common value from a list 
 # Useful for base cases 1 and 3 above.
 def majority(values):
+    freq = counts(values)
+    return max(freq, key=freq.get)
+    
 
-    # placeholder return value
-    return 0
-    
-    
 # Calculate the entropy of a set of values 
 # First count how often each value shows up 
 # When you divide this value by the total number 
@@ -79,9 +119,9 @@ def majority(values):
 # The entropy is the negation of the sum of p*log2(p) 
 # for all these probabilities.
 def entropy(values):
-
-    # placeholder return value
-    return 0
+    freq = counts(values)
+    total = len(values)
+    return -sum((count / total) * math.log2(count / total) for count in freq.values())
 
 # This is the main decision tree class 
 # DO NOT CHANGE THE FOLLOWING LINE
@@ -114,10 +154,21 @@ class DecisionTree:
         
         # IMPORTANT: You have to perform this classification *for each* element in x 
         
-        # placeholder return value
         # Note that the result is a list of predictions, one for each x-value
-        return [self.majority for _ in x]
-    
+        predictions = []
+        for row in x:
+            node = self.tree
+            while node["type"] == "split":
+                column = node["split"]
+                value = row[column]
+                if value in node["children"]:
+                    node = node["children"][value]
+                else:
+                    node = {"type": "class", "class": self.majority}
+            predictions.append(node["class"])
+        return predictions
+
+
     # DO NOT CHANGE THE FOLLOWING LINE
     def to_dict(self):
     # DO NOT CHANGE THE PRECEDING LINE
