@@ -1,97 +1,150 @@
-import math
-import matplotlib.pyplot as plt
-import numpy as np
-import random
-import patterns
-import pandas
 import sys
+import classification
+import pandas
+import numpy
+import random
+import json
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.naive_bayes import CategoricalNB
+from sklearn.preprocessing import OrdinalEncoder
 
-random.seed(0)
-
-APRIORI_TESTS = ["Find common letters in words (low threshold)", "Find common letters in words (high threshold)", "Find association rules for letters (low threshold)", "Find association rules for letters (high threshold)", "Compare association rule metrics on letters", "Find patterns in data set", "Find association rules in data set"]
-
-def show_itemsets(itemsets):
-    for itemset,support in itemsets:
-        print(",".join(itemset), "%.2f"%(support))
+# Naive Bayes using sklearn 
+class NaiveBayes:
+    def fit(self, x,y):
+        # NB needs the categories to be converted to numbers 
+        # The ordinal encoder does exactly that 
+        self.encoder = OrdinalEncoder()
+        self.NB = CategoricalNB()
+        # encode the data 
+        xenc = self.encoder.fit_transform(x)
+        # fit the naive bayes model 
+        self.NB.fit(xenc,y)
+    def predict(self, x):
+        # to predict, we first need to encode the data (using the same encoder)
+        # and then predict using the NB model 
+        return self.NB.predict(self.encoder.transform(x))
+    def to_dict(self):
+        # Just to have some representation for the classifier
+        return {"encoder": str(self.encoder), "nb": str(self.NB)}
         
-def show_rules(rules):
-    for condition,effect,metric in rules:
-        print(",".join(condition), "=>", ",".join(effect), "%.2f"%(metric))
+CATMAP = {"low": 0, "medium": 1, "high": 2}
+BINMAP = {False: 0, True: 1}
+COLORS = {0: "Red", 1: "Blue"}
+
     
-def apriori_testcase(data, letters, n):
-    print("running test:", APRIORI_TESTS[n])
+def plot(title, xs, ys, predys, mapping=CATMAP):
+    markers = dict(zip(set(ys), ["+", "_", "*", "^", "s", "D"]))
+    x1s = {}
+    x2s = {}
+    colors = {}
+    for m in markers:
+        x1s[m] = []
+        x2s[m] = []
+        colors[m] = []
+    for x,y,py in zip(xs,ys,predys):
+        
+        x1s[y].append(mapping[x[0]]+random.gauss(0,0.05))
+        x2s[y].append(mapping[x[1]]+random.gauss(0,0.05))
+        colors[y].append(COLORS[py])
+    for m in markers:
+        plt.scatter(x1s[m], x2s[m], c=colors[m], marker=markers[m])
+    plt.show()
+
+def evaluate(prefix, y, predy):
+    correct = 0
+    for p,v in zip(predy, y):
+        if p == v: correct += 1
+    print("%sAccuracy: %.2f"%(prefix, correct*1.0/len(y)))
+    
+def get_columns(rows, columns, single=False):
+    if single:
+        return [row[columns[0]] for row in rows]
+    return [[row[c] for c in columns] for row in rows]
+    
+CLASSIFICATION_TESTS = ["Predict class from two categories (1+2)", "Predict class from two categories (3+4)", "Predict class from all four categories", "Predict class from three categories (2-4)", "Predict class from two binary attributes (1+2)", "Predict class from three binary attributes (3+4)", "Predict class from wrong categorical attributes", "Predict class from wrong binary attributes"]
+
+MODELS = {"Decision Tree": classification.DecisionTree, "Naive Bayes": NaiveBayes}
+    
+def classification_testcase(training, validation, n, visualize=True, model="Decision Tree"):
+    print("running test:", CLASSIFICATION_TESTS[n])
     if n == 0:
-        common = patterns.apriori(letters, 0.1)
-        print("This should find a few frequent itemsets with many items (letters)")
-        show_itemsets(common)
+        columns = ["cat1", "cat2"]
+        target = ["cls3"]
+        mapping = CATMAP
     elif n == 1:
-        common = patterns.apriori(letters, 0.6)
-        print("This should find a frequent itemset with few items (letters)")
-        show_itemsets(common)
+        columns = ["cat3", "cat4"]
+        target = ["cls3"]
+        mapping = CATMAP
     elif n == 2:
-        common = patterns.apriori(letters, 0.1)
-        rules = patterns.association_rules(letters, common, "all", 0.3)
-        print("Should find many association rules")
-        show_rules(rules)
+        columns = ["cat1", "cat2", "cat3", "cat4"]
+        target = ["cls3"]
+        visualize = False
     elif n == 3:
-        common = patterns.apriori(letters, 0.5)
-        rules = patterns.association_rules(letters, common, "all", 0.8)
-        print("Should find very few association rules")
-        show_rules(rules)
+        columns = ["cat2", "cat3", "cat4"]
+        target = ["cls3"]
+        visualize = False
     elif n == 4:
-        common = patterns.apriori(letters, 0.3)
-        print("Will find several association rules, most for 'max', least/none for 'all'")
-        for metric in ["lift", "all", "max", "kulczynski", "cosine"]:
-            rules = patterns.association_rules(letters, common, metric, 0.71)
-            print(metric + ": ")
-            show_rules(rules)
-            print()
+        columns = ["bin1", "bin2"]
+        target = ["cls4"]
+        mapping = BINMAP
     elif n == 5:
-        common = patterns.apriori(data, 0.35)
-        print("Should find several frequent itemsets with 2 items each")
-        show_itemsets(common)
+        columns = ["bin3", "bin4", "bin5"]
+        target = ["cls4"]
+        visualize = False
     elif n == 6:
-        common = patterns.apriori(data, 0.35)
-        print("'all' may not return any rules, 'max' should return the most")
-        for metric in ["lift", "all", "max", "kulczynski", "cosine"]:
-            rules = patterns.association_rules(data, common, metric, 0.7)
-            print(metric + ": ")
-            show_rules(rules)
-            print()
+        columns = ["bin1", "bin2", "bin3", "bin4", "bin5"]
+        target = ["cls4"]
+        visualize = False
+    elif n == 7:
+        columns = ["cat1", "cat2"]
+        target = ["cls4"]
+        mapping = CATMAP
+    elif n == 8:
+        columns = ["bin1", "bin2", "bin3", "bin4", "bin5"]
+        target = ["cls3"]
+        visualize = False
         
-def to_set(row):
-    result = set()
-    for x in ["x1", "x2", "x3", "x4"]:
-        if row[x] > 0.5:
-            result.add(x)
-    for c in ["cat1", "cat2", "cat3", "cat4"]:
-        result.add(c + row[c])
-    for b in ["bin1", "bin2", "bin3", "bin4", "bin5"]:
-        if row[b] == "true":
-            result.add(b)
-    return result
+    m = MODELS[model]()
+    tx = get_columns(training, columns)
+    ty = get_columns(training, target, single=True)
+    m.fit(tx, ty)
+    print(json.dumps(m.to_dict(), indent=4))
+    predty = m.predict(tx)
+    evaluate(model + " training ", ty, predty)
+    vx = get_columns(validation, columns)
+    vy = get_columns(validation, target, single=True)
+    predvy = m.predict(vx)
+    evaluate(model + " validation ", vy, predvy)
     
-def main(auto=False, steps=[]):
-    words = ["loquacious", "insidious", "ferocious", "plausible", "atrocious",
-                             "thematic", "vindicative", "automated", "pernicious", "advantageous",
-                             "ambitious", "suspicious", "contentious", "curious", "guarded", "elusive",
-                             "thousand", "approach", "intrusion", "suddenly", "obscure", "island", "ionic",
-                             "oust", "obstinate", "foiled", "oily", "spoilers"]
-    letters = list(map(set, words))
+    if visualize:
+        plot(model + " training set", tx, ty, predty, mapping)
+        plot(model + " validation set", vx, vy, predvy, mapping)
 
+def main(auto=False, nb=False, steps=[]):
+    random.seed(1337)
     df = pandas.read_csv("testdata.csv")
-    data = [to_set(item) for (idx,item) in df.iterrows()]
+    model = "Decision Tree"
+    if nb:
+        model = "Naive Bayes"
+    training = []
+    validation = []
+    for i,row in df.iterrows():
+        if random.random() > 0.85:
+            validation.append(row)
+        else:
+            training.append(row)
+    
     if auto:
-        for i,t in enumerate(APRIORI_TESTS):
+        for i,t in enumerate(CLASSIFICATION_TESTS):
             print("-"*80)
-            apriori_testcase(data, letters, i)
+            classification_testcase(training, validation, i, False, model)
         return
-    tests = APRIORI_TESTS
+    tests = CLASSIFICATION_TESTS
     while True:
         print("Which test case do you want to run?")
         for i,t in enumerate(tests):
             print(f"   {i} {t}")
-        print("   d print word data set")
         print("   q exit")
         if steps:
             x = steps[0]
@@ -99,22 +152,19 @@ def main(auto=False, steps=[]):
         else:
             x = input("> ")
         if x in [str(i) for i,_ in enumerate(tests)]:
-            apriori_testcase(data, letters, int(x))
-        elif x == "d":
-            print("Word list:\n  " + "\n  ".join(words))
+            classification_testcase(training, validation, int(x), model=model)
         elif x == "q":
             print("Bye")
             sys.exit(0)
         else:
             print("Please select a test case, r or q")
         print()
-    
-    
-    
+
 if __name__ == "__main__":
     if "--help" in sys.argv:
         print("Usage: testcases.py [--auto] steps")
         print("   --auto runs the tests automatically")
+        print("   --naive-bayes uses the Naive Bayes classifier from sklearn; useful as a comparison")
         print("   <steps> is a sequence of inputs that are passed to the menu before it accepts manual input.")
         print("           This allows you to run e.g. 'python testcases.py 12q' to run test cases 1 and 2")
         print("           in sequence, followed by q(uit)")
@@ -122,6 +172,5 @@ if __name__ == "__main__":
         print("           having to navigate the menu every time.")
         sys.exit(0)
     else:
-        main("--auto" in sys.argv, 
-             list("".join([arg for arg in sys.argv[1:] if "--" not in arg])))
-        
+        main("--auto" in sys.argv, "--bayes" in sys.argv or "--naive-bayes" in sys.argv or "-n" in sys.argv,
+             list("".join([arg for arg in sys.argv[1:] if "-" not in arg])))
