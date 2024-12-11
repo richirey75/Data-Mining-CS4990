@@ -1,4 +1,5 @@
 import math
+from collections import defaultdict
 
 # These are suggested helper functions
 # You can structure your code differently, but if you have
@@ -175,10 +176,65 @@ class DecisionTree:
         # change this if you store the tree in a different format
         return self.tree
 
+#The indicated calculate_performance function should take the actual and the predicted y-values 
+# and compute the accuracy, precision and recall of the classifier and 
+# print them (check the test framework for an example of such a function for the binary case).
+
+def calculate_performance(actual, predicted):
+    """
+    Calculate and print accuracy, precision, and recall for the classifier.
+    Handles both binary and multi-class scenarios.
+    """
+    # Initialize counts
+    class_counts = defaultdict(lambda: {"tp": 0, "fp": 0, "fn": 0, "tn": 0})
+    
+    # Identify all unique classes
+    classes = set(actual)
+    
+    # Compute true positives, false positives, false negatives, and true negatives per class
+    for i in range(len(actual)):
+        for cls in classes:
+            if actual[i] == cls and predicted[i] == cls:
+                class_counts[cls]["tp"] += 1
+            elif actual[i] != cls and predicted[i] == cls:
+                class_counts[cls]["fp"] += 1
+            elif actual[i] == cls and predicted[i] != cls:
+                class_counts[cls]["fn"] += 1
+            elif actual[i] != cls and predicted[i] != cls:
+                class_counts[cls]["tn"] += 1
+    
+    # Compute metrics per class
+    precisions, recalls = [], []
+    print("Performance metrics per class:")
+    for cls in classes:
+        tp = class_counts[cls]["tp"]
+        fp = class_counts[cls]["fp"]
+        fn = class_counts[cls]["fn"]
+        
+        precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+        precisions.append(precision)
+        recalls.append(recall)
+        
+        print(f"Class {cls}:")
+        print(f"  Precision: {precision:.2f}")
+        print(f"  Recall: {recall:.2f}")
+    
+    # Compute overall metrics
+    accuracy = sum(1 for i in range(len(actual)) if actual[i] == predicted[i]) / len(actual)
+    weighted_precision = sum(precisions) / len(classes)
+    weighted_recall = sum(recalls) / len(classes)
+    
+    print("\nOverall performance metrics:")
+    print(f"Accuracy: {accuracy:.2f}")
+    print(f"Weighted Precision: {weighted_precision:.2f}")
+    print(f"Weighted Recall: {weighted_recall:.2f}")
+
 # --- classification ---
 # classifier = DecisionTree()
 # classifier.fit(train_x, train_y)
 # train_y_hat = classifier.predict(train_x)
 # calculate_performance(train_y, train_y_hat)
 # validation_y_hat = classifier.predict(validation_x)
+#pull classifier decision tree 
 # calculate_performance(validation_y, validation_y_hat)
