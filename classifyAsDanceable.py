@@ -18,7 +18,7 @@ def load_data(file_path):
     return dataset
 
 # Split data into training and validation sets
-def split_data(dataset, train_ratio=0.8):
+def split_data(dataset, train_ratio=0.75):
     random.shuffle(dataset)
     split_point = int(len(dataset) * train_ratio)
     train_set = dataset[:split_point]
