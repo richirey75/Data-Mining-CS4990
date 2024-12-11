@@ -128,8 +128,12 @@ def entropy(values):
 # DO NOT CHANGE THE FOLLOWING LINE
 class DecisionTree:
 # DO NOT CHANGE THE PRECEDING LINE
-    def __init__(self, tree={}):
+# replace all attributes after tree={} with None to test without pruning
+    def __init__(self, tree={}, max_depth=3, min_entropy=0.7, pruning_type="level"):
         self.tree = tree
+        self.max_depth = max_depth
+        self.min_entropy = min_entropy
+        self.pruning_type = pruning_type
     
     # DO NOT CHANGE THE FOLLOWING LINE    
     def fit(self, x, y):
@@ -137,12 +141,33 @@ class DecisionTree:
     
         self.majority = majority(y)
         self.tree = make_node(y, x, y, list(range(len(x[0]))))
+        self.tree = self.prune(self.tree, current_level=0, max_depth=self.max_depth, min_entropy=self.min_entropy)
+    
+    def prune(self, node, current_level, max_depth, min_entropy):
+        if max_depth is None:
+            return node
+        if self.pruning_type == "level":
+            # if leaf node is found
+            if node["type"] == "class":
+                return node
+
+            if current_level >= max_depth:
+                return {"type": "class", "class": majority(node)}
+        if self.pruning_type == "entropy":
+            if entropy(node) <= min_entropy:
+                return {"type": "class", "class": majority(node)}
+        if "children" in node:
+            for value, child in node["children"].items():
+                node["children"][value] = self.prune(child, current_level + 1, max_depth, min_entropy)
+
+        return node
         
     # DO NOT CHANGE THE FOLLOWING LINE    
     def predict(self, x):
     # DO NOT CHANGE THE PRECEDING LINE    
         if not self.tree:
             return None
+
 
         # To classify using the tree:
         # Start with the root as the "current" node
@@ -168,6 +193,7 @@ class DecisionTree:
                     node = {"type": "class", "class": self.majority}
             predictions.append(node["class"])
         return predictions
+    
 
 
     # DO NOT CHANGE THE FOLLOWING LINE
