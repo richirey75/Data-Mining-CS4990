@@ -16,7 +16,7 @@ def load_data(file_path):
                 # Add other fields if needed
             })
     return dataset
-
+#change it to train test validate
 # Split data into training and validation sets
 def split_data(dataset, train_ratio=0.75):
     random.shuffle(dataset)

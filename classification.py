@@ -143,7 +143,7 @@ def entropy(values):
 class DecisionTree:
 # DO NOT CHANGE THE PRECEDING LINE
 # replace all attributes after tree={} with None to test without pruning
-    
+
 #Comment For Pruning
     def __init__(self, tree={}):
         self.tree = tree
