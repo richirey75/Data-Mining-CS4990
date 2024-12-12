@@ -145,6 +145,7 @@ class DecisionTree:
 # DO NOT CHANGE THE PRECEDING LINE
 # replace all attributes after tree={} with None to test without pruning
  #Uncomment For Pruning
+         #Pruning version 
     def __init__(self, tree={}, pruning_type = 'yes', max_depth=2, min_entropy = 0.65):
         self.tree = tree
         self.max_depth = max_depth
@@ -203,9 +204,6 @@ class DecisionTree:
     # DO NOT CHANGE THE PRECEDING LINE
         # change this if you store the tree in a different format
         return self.tree
-        #Pruning version 
-
-
 
 
 #The indicated calculate_performance function should take the actual and the predicted y-values 
@@ -262,14 +260,6 @@ def calculate_performance(actual, predicted):
     print(f"Weighted Precision: {weighted_precision:.2f}")
     print(f"Weighted Recall: {weighted_recall:.2f}")
 
-# --- classification ---
-# classifier = DecisionTree()
-# classifier.fit(train_x, train_y)
-# train_y_hat = classifier.predict(train_x)
-# calculate_performance(train_y, train_y_hat)
-# validation_y_hat = classifier.predict(validation_x)
-#pull classifier decision tree 
-# calculate_performance(validation_y, validation_y_hat)
 
 def plot_label_differences(train_y, train_y_hat, validation_y, validation_y_hat, test_y, test_y_hat):
     """
