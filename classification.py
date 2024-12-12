@@ -145,7 +145,7 @@ class DecisionTree:
 # DO NOT CHANGE THE PRECEDING LINE
 # replace all attributes after tree={} with None to test without pruning
  #Uncomment For Pruning
-    def __init__(self, tree={}, pruning_type = 'yes', max_depth=2, min_entropy = 0.5):
+    def __init__(self, tree={}, pruning_type = 'yes', max_depth=2, min_entropy = 0.65):
         self.tree = tree
         self.max_depth = max_depth
         self.min_entropy = min_entropy
