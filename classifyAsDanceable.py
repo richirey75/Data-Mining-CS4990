@@ -1,6 +1,6 @@
 import random
 import csv
-from classification import DecisionTree,calculate_performance
+from classification import DecisionTree, calculate_performance
 
 # Load data from CSV
 def load_data(file_path):
@@ -13,10 +13,17 @@ def load_data(file_path):
                 "energy": float(row["energy"]),
                 "valence": float(row["valence"]),
                 "danceability": 1 if float(row["danceability"]) > 0.5 else 0,  # Danceable threshold
-                # Add other fields if needed
+                "speechiness": float(row["speechiness"]),
+                "acousticness": float(row["acousticness"]),
+                "instrumentalness": float(row["instrumentalness"]),
+                "liveness": float(row["liveness"]),
+                "tempo": float(row["tempo"]),
+                "duration_min": float(row["duration_min"]),
+                "key": int(row["key"]),  # Assuming 'key' is an integer
+                "mode": int(row["mode"]),  # Assuming 'mode' is an integer
             })
     return dataset
-#change it to train test validate
+
 # Split data into training and validation sets
 def split_data(dataset, train_ratio=0.75):
     random.shuffle(dataset)
@@ -27,8 +34,13 @@ def split_data(dataset, train_ratio=0.75):
 
 # Prepare data for the decision tree
 def prepare_data(dataset):
-    xs = [[row["energy"], row["valence"]] for row in dataset]  # Use energy and valence
-    ys = [row["danceability"] for row in dataset]
+    # Using multiple features for training
+    xs = [[
+        row["energy"], row["valence"], row["speechiness"], 
+        row["acousticness"], row["instrumentalness"], row["liveness"], 
+        row["tempo"], row["duration_min"], row["key"], row["mode"]
+    ] for row in dataset]
+    ys = [row["danceability"] for row in dataset]  # Target variable: danceability
     return xs, ys
 
 # Main workflow
