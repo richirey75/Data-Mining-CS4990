@@ -1,7 +1,8 @@
 import random
 import csv
-from classification import DecisionTree, calculate_performance
-
+from classification import DecisionTree, calculate_performance, plot_label_differences
+import numpy as np
+import matplotlib.pyplot as plt
 # Load data from CSV
 def load_data(file_path):
     dataset = []
@@ -12,7 +13,7 @@ def load_data(file_path):
             dataset.append({
                 "energy": float(row["energy"]),
                 "valence": float(row["valence"]),
-                "danceability": 1 if float(row["danceability"]) > 0.5 else 0,  # Danceable threshold
+                "danceability": 1 if float(row["danceability"]) > 0.75 else 0,  # Danceable threshold
                 "speechiness": float(row["speechiness"]),
                 "acousticness": float(row["acousticness"]),
                 "instrumentalness": float(row["instrumentalness"]),
@@ -24,13 +25,17 @@ def load_data(file_path):
             })
     return dataset
 
-# Split data into training and validation sets
-def split_data(dataset, train_ratio=0.75):
+# Split data into 70% training, 15% validation, and 15% testing sets
+def split_data(dataset, train_ratio=0.7, val_ratio=0.15):
     random.shuffle(dataset)
-    split_point = int(len(dataset) * train_ratio)
-    train_set = dataset[:split_point]
-    validation_set = dataset[split_point:]
-    return train_set, validation_set
+    train_split = int(len(dataset) * train_ratio)
+    val_split = int(len(dataset) * (train_ratio + val_ratio))
+    
+    train_set = dataset[:train_split]
+    validation_set = dataset[train_split:val_split]
+    test_set = dataset[val_split:]
+    
+    return train_set, validation_set, test_set
 
 # Prepare data for the decision tree
 def prepare_data(dataset):
@@ -49,10 +54,11 @@ def main():
     file_path = "combined_tracks.csv"  # Replace with your dataset file path
     dataset = load_data(file_path)
     
-    # Split into training and validation sets
-    train_set, validation_set = split_data(dataset)
+    # Split into training, validation, and testing sets
+    train_set, validation_set, test_set = split_data(dataset)
     train_x, train_y = prepare_data(train_set)
     validation_x, validation_y = prepare_data(validation_set)
+    test_x, test_y = prepare_data(test_set)
     
     # Train the decision tree classifier
     classifier = DecisionTree()
@@ -67,10 +73,17 @@ def main():
     validation_y_hat = classifier.predict(validation_x)
     print("\nValidation Performance:")
     calculate_performance(validation_y, validation_y_hat)
+
+    # Evaluate on testing data
+    test_y_hat = classifier.predict(test_x)
+    print("\nTesting Performance:")
+    calculate_performance(test_y, test_y_hat)
     
     # Print decision tree
     print("\nDecision Tree Structure:")
     print(classifier.to_dict())
+
+    plot_label_differences(train_y, train_y_hat, validation_y, validation_y_hat, test_y, test_y_hat)
 
 # Run the program
 if __name__ == "__main__":

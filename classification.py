@@ -1,6 +1,7 @@
 import math
 from collections import defaultdict
-
+import numpy as np
+import matplotlib.pyplot as plt
 # These are suggested helper functions
 # You can structure your code differently, but if you have
 # trouble getting started, this might be a good starting point
@@ -269,3 +270,57 @@ def calculate_performance(actual, predicted):
 # validation_y_hat = classifier.predict(validation_x)
 #pull classifier decision tree 
 # calculate_performance(validation_y, validation_y_hat)
+
+def plot_label_differences(train_y, train_y_hat, validation_y, validation_y_hat, test_y, test_y_hat):
+    """
+    Plots the difference between predicted and actual labels for train, validation, and test datasets.
+
+    Args:
+        train_y: Actual labels for the training set.
+        train_y_hat: Predicted labels for the training set.
+        validation_y: Actual labels for the validation set.
+        validation_y_hat: Predicted labels for the validation set.
+        test_y: Actual labels for the test set.
+        test_y_hat: Predicted labels for the test set.
+    """
+
+    # --- Debugging Print Statements (Optional) ---
+    print("train_y shape:", np.array(train_y).shape)
+    print("train_y_hat shape:", np.array(train_y_hat).shape)
+    print("validation_y shape:", np.array(validation_y).shape)
+    print("validation_y_hat shape:", np.array(validation_y_hat).shape)
+    print("test_y shape:", np.array(test_y).shape)
+    print("test_y_hat shape:", np.array(test_y_hat).shape)
+    # --- End of Debugging Print Statements ---
+
+    # Calculate differences
+    train_diff = np.array(train_y) - np.array(train_y_hat)
+    validation_diff = np.array(validation_y) - np.array(validation_y_hat)
+    test_diff = np.array(test_y) - np.array(test_y_hat)
+
+    # Create subplots
+    fig, axs = plt.subplots(3, 1, figsize=(8, 12))
+
+    # Plot for training set
+    axs[0].hist(train_diff, bins=np.arange(-1.5, 2.5, 1), edgecolor='black')
+    axs[0].set_title('Training Set')
+    axs[0].set_xlabel('Difference (Actual - Predicted)')
+    axs[0].set_ylabel('Frequency')
+    axs[0].set_xticks([-1, 0, 1])
+
+    # Plot for validation set
+    axs[1].hist(validation_diff, bins=np.arange(-1.5, 2.5, 1), edgecolor='black')
+    axs[1].set_title('Validation Set')
+    axs[1].set_xlabel('Difference (Actual - Predicted)')
+    axs[1].set_ylabel('Frequency')
+    axs[1].set_xticks([-1, 0, 1])
+
+    # Plot for test set
+    axs[2].hist(test_diff, bins=np.arange(-1.5, 2.5, 1), edgecolor='black')
+    axs[2].set_title('Test Set')
+    axs[2].set_xlabel('Difference (Actual - Predicted)')
+    axs[2].set_ylabel('Frequency')
+    axs[2].set_xticks([-1, 0, 1])
+
+    plt.tight_layout()  # Adjust spacing between subplots
+    plt.show()  # Ensure plt.show() is called to display the plot
